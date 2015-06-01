@@ -1,0 +1,14 @@
+- hosts: all
+  sudo: yes
+  vars:
+    dbname: test
+    dbuser: test
+    dbpassword: test
+  tasks:
+    - apt: update_cache=yes cache_valid_time=86400
+
+    - apt: name=python-mysqldb
+    - apt: name=mysql-server
+
+    - mysql_db: db={{ dbname }} encoding=utf8 collation=utf8_general_ci state=present
+    - mysql_user: name={{ dbuser }} password={{ dbpassword }} priv="{{ dbuser }}.*:ALL"
