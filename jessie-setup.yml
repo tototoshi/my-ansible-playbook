@@ -1,0 +1,44 @@
+- hosts: all
+  sudo: yes
+  vars:
+    locale: ja_JP.UTF-8
+    timezone: UTC
+  tasks:
+    - apt: update_cache=yes cache_valid_time=86400
+
+    # system
+    - locale_gen: name=ja_JP.UTF-8 state=present
+    - name: set locale
+      command: /usr/sbin/update-locale LANG={{ locale }} LC_ALL={{ locale }}
+    - name: set /etc/localtime
+      file: src=/usr/share/zoneinfo/{{ timezone }} dest=/etc/localtime state=link force=yes
+    - name: set /etc/timezone
+      copy: content={{ timezone }} dest=/etc/timezone
+      notify: update timezone
+
+    # tools
+    - apt: name=vim
+    - apt: name=emacs24-nox
+    - apt: name=git
+    - apt: name=curl
+    - apt: name=lv
+    - apt: name=tree
+    - apt: name=tar
+    - apt: name=unzip
+    - apt: name=build-essential
+    - apt: name=iptables
+    - apt: name=iptables-persistent
+
+    # Java 8
+    - shell: echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" > /etc/apt/sources.list.d/webupd8team-java.list
+    - shell: echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" >> /etc/apt/sources.list.d/webupd8team-java.list
+    - shell: apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys EEA14886
+    - shell: apt-get update
+    - name: auto accept oracle jdk license
+      shell: echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections
+    - name: install java8
+      shell: apt-get install -y oracle-java8-installer ca-certificates
+
+  handlers:
+    - name: update timezone
+      command: dpkg-reconfigure --frontend noninteractive tzdata
